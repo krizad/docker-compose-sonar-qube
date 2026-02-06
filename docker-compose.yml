@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    container_name: sonarqube-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sonarnet
+    restart: unless-stopped
+    # Resource limits for DB
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1g
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${SONARQUBE_PORT}:9000"
+      # Uncomment to expose Elasticsearch port if needed
+      # - "9001:9001"
+    environment:
+      SONAR_JDBC_URL: ${SONAR_JDBC_URL}
+      SONAR_JDBC_USERNAME: ${SONAR_JDBC_USERNAME}
+      SONAR_JDBC_PASSWORD: ${SONAR_JDBC_PASSWORD}
+      # JVM tuning for SonarQube (adjust as needed)
+      SONARQUBE_JAVA_OPTS: "${SONARQUBE_JAVA_OPTS}"
+    volumes:
+      - sq_data:/opt/sonarqube/data
+      - sq_extensions:/opt/sonarqube/extensions
+      - sq_logs:/opt/sonarqube/logs
+    networks:
+      - sonarnet
+    restart: unless-stopped
+    # Resource limits for SonarQube
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 3g
+
+networks:
+  sonarnet:
+
+volumes:
+  pg_data:
+  sq_data:
+  sq_extensions:
+  sq_logs:

@@ -1,0 +1,54 @@
+# Docker Ignore File
+# Prevent unnecessary files from being sent to Docker daemon
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# GitHub
+.github/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# CI/CD
+.travis.yml
+.gitlab-ci.yml
+.circleci/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Test and coverage
+test/
+tests/
+coverage/
+*.test
+*.spec
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
