@@ -3,7 +3,7 @@ version: "3.8"
 services:
   db:
     image: postgres:15
-    container_name: sonarqube-db
+    container_name: sonarqube-plugin-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,49 +11,48 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sonar -d sonar"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 10
     networks:
       - sonarnet
     restart: unless-stopped
-    # Resource limits for DB
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1g
 
   sonarqube:
     image: sonarqube:community
-    container_name: sonarqube-app
+    container_name: sonarqube-plugin-app
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "${SONARQUBE_PORT}:9000"
-      # Uncomment to expose Elasticsearch port if needed
-      # - "9001:9001"
     environment:
-      SONAR_JDBC_URL: ${SONAR_JDBC_URL}
-      SONAR_JDBC_USERNAME: ${SONAR_JDBC_USERNAME}
-      SONAR_JDBC_PASSWORD: ${SONAR_JDBC_PASSWORD}
-      # JVM tuning for SonarQube (adjust as needed)
-      SONARQUBE_JAVA_OPTS: "${SONARQUBE_JAVA_OPTS}"
+      - SONAR_JDBC_URL=${SONAR_JDBC_URL}
+      - SONAR_JDBC_USERNAME=${SONAR_JDBC_USERNAME}
+      - SONAR_JDBC_PASSWORD=${SONAR_JDBC_PASSWORD}
+      - SONAR_WEB_JAVAADDITIONALOPTS=-Xmx2G -Xms1G -XX:+UseG1GC -javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=web
+      - SONAR_CE_JAVAADDITIONALOPTS=-Xmx2G -Xms1G -XX:+UseG1GC -javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=ce
+      - SONAR_JDBC_MAXWAIT=10000
     volumes:
       - sq_data:/opt/sonarqube/data
       - sq_extensions:/opt/sonarqube/extensions
       - sq_logs:/opt/sonarqube/logs
+      - ./plugins/sonarqube-community-branch-plugin.jar:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar
+      - ./plugins/sonar-build-breaker-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-build-breaker.jar
     networks:
       - sonarnet
     restart: unless-stopped
-    # Resource limits for SonarQube
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 3g
+          cpus: "2.0"
+          memory: 4g
 
 networks:
   sonarnet:
