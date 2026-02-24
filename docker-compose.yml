@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:15
@@ -25,7 +23,8 @@ services:
           memory: 1g
 
   sonarqube:
-    image: sonarqube:community
+    # ใช้เวอร์ชันล่าสุดที่รองรับ Java 21 และ NestJS รุ่นใหม่
+    image: mc1arke/sonarqube-with-community-branch-plugin:26.1.0.118079-community
     container_name: sonarqube-plugin-app
     depends_on:
       db:
@@ -33,17 +32,18 @@ services:
     ports:
       - "${SONARQUBE_PORT}:9000"
     environment:
-      - SONAR_JDBC_URL=${SONAR_JDBC_URL}
-      - SONAR_JDBC_USERNAME=${SONAR_JDBC_USERNAME}
-      - SONAR_JDBC_PASSWORD=${SONAR_JDBC_PASSWORD}
-      - SONAR_WEB_JAVAADDITIONALOPTS=-Xmx2G -Xms1G -XX:+UseG1GC -javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=web
-      - SONAR_CE_JAVAADDITIONALOPTS=-Xmx2G -Xms1G -XX:+UseG1GC -javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar=ce
+      - SONAR_JDBC_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SONAR_JDBC_USERNAME=${POSTGRES_USER}
+      - SONAR_JDBC_PASSWORD=${POSTGRES_PASSWORD}
+      # ต้องใส่ -javaagent ของ Community Branch Plugin ด้วย ไม่งั้น plugin จะ detect agent ไม่ได้
+      - SONAR_WEB_JAVAADDITIONALOPTS=-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin-26.1.0.jar=web -Xmx2G -Xms1G -XX:+UseG1GC
+      - SONAR_CE_JAVAADDITIONALOPTS=-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin-26.1.0.jar=ce -Xmx2G -Xms1G -XX:+UseG1GC
       - SONAR_JDBC_MAXWAIT=10000
     volumes:
       - sq_data:/opt/sonarqube/data
-      - sq_extensions:/opt/sonarqube/extensions
       - sq_logs:/opt/sonarqube/logs
-      - ./plugins/sonarqube-community-branch-plugin.jar:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin.jar
+      # ไม่ Mount sq_extensions เพื่อเลี่ยงปัญหา Agent modifications error
+      # Mount เฉพาะ Build Breaker เข้าไปในโฟลเดอร์ plugins โดยตรง
       - ./plugins/sonar-build-breaker-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-build-breaker.jar
     networks:
       - sonarnet
@@ -60,5 +60,4 @@ networks:
 volumes:
   pg_data:
   sq_data:
-  sq_extensions:
   sq_logs:
