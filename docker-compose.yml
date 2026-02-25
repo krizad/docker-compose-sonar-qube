@@ -43,8 +43,7 @@ services:
       - sq_data:/opt/sonarqube/data
       - sq_logs:/opt/sonarqube/logs
       - sq_extensions:/opt/sonarqube/extensions
-      # Mount Build Breaker เข้าไปในโฟลเดอร์ plugins
-      - ./plugins/sonar-build-breaker-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-build-breaker.jar
+
     networks:
       - sonarnet
     restart: unless-stopped
