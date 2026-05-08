@@ -91,7 +91,6 @@ SONARQUBE_JAVA_OPTS=-Xmx2g -Xms512m
 ```bash
 sonarqube_pg_data         # PostgreSQL data
 sonarqube_sq_data         # SonarQube data
-sonarqube_sq_extensions   # Plugins
 sonarqube_sq_logs         # Logs
 ```
 

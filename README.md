@@ -100,7 +100,6 @@ Adjust these in `docker-compose.yml` if needed.
 The setup creates persistent volumes for:
 - `pg_data`: PostgreSQL database data
 - `sq_data`: SonarQube data
-- `sq_extensions`: SonarQube plugins and extensions
 - `sq_logs`: SonarQube logs
 
 ## 🔧 Management Commands
